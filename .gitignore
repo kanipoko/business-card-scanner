@@ -1,0 +1,17 @@
+# Environment variables
+.env
+.env.local
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# Vercel
+.vercel
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Development files
+create_icons.py

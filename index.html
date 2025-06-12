@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名刺スキャナー</title>
+    <meta name="description" content="名刺を撮影してvCard形式で保存するアプリ">
+    <meta name="theme-color" content="#667eea">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="名刺スキャナー">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📇 名刺スキャナー</h1>
+            <p>名刺を撮影してvCard形式で保存</p>
+            <button id="install-btn" class="install-btn" style="display: none;">📱 アプリをインストール</button>
+        </header>
+
+        <main>
+            <!-- カメラ撮影セクション -->
+            <section class="camera-section">
+                <video id="camera" autoplay playsinline></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+                
+                <div class="camera-controls">
+                    <button id="start-camera" class="btn primary">📷 カメラを開く</button>
+                    <button id="capture" class="btn primary" style="display: none;">📸 撮影</button>
+                    <button id="stop-camera" class="btn secondary" style="display: none;">停止</button>
+                </div>
+            </section>
+
+            <!-- プレビューセクション -->
+            <section class="preview-section" style="display: none;">
+                <h2>撮影した画像</h2>
+                <img id="preview-image" alt="撮影した名刺">
+                <div class="preview-controls">
+                    <button id="analyze-btn" class="btn primary">🔍 名刺を解析</button>
+                    <button id="retake-btn" class="btn secondary">📷 再撮影</button>
+                </div>
+            </section>
+
+            <!-- 読み込み中 -->
+            <section class="loading-section" style="display: none;">
+                <div class="spinner"></div>
+                <p>名刺を解析中...</p>
+            </section>
+
+            <!-- 結果編集セクション -->
+            <section class="result-section" style="display: none;">
+                <h2>抽出結果</h2>
+                <form id="contact-form">
+                    <div class="form-group">
+                        <label for="name">名前</label>
+                        <input type="text" id="name" name="name" placeholder="山田 太郎">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="company">会社名</label>
+                        <input type="text" id="company" name="company" placeholder="株式会社サンプル">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">電話番号</label>
+                        <input type="tel" id="phone" name="phone" placeholder="03-1234-5678">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">メールアドレス</label>
+                        <input type="email" id="email" name="email" placeholder="yamada@example.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address">会社住所</label>
+                        <textarea id="address" name="address" rows="3" placeholder="東京都渋谷区..."></textarea>
+                    </div>
+                    
+                    <div class="form-controls">
+                        <button type="button" id="download-vcard" class="btn primary">📱 vCardをダウンロード</button>
+                        <button type="button" id="new-scan" class="btn secondary">🔄 新しい名刺をスキャン</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- エラーメッセージ -->
+            <div id="error-message" class="error-message" style="display: none;"></div>
+        </main>
+    </div>
+
+    <script src="vcard.js"></script>
+    <script src="api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
