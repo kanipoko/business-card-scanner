@@ -53,30 +53,60 @@
             <!-- 結果編集セクション -->
             <section class="result-section" style="display: none;">
                 <h2>抽出結果</h2>
+                
+                <!-- 抽出されたアイテム（ドラッグ元） -->
+                <div class="extracted-items" id="extracted-items">
+                    <h3>抽出された情報</h3>
+                    <div class="items-container" id="items-container">
+                        <!-- 動的に生成される -->
+                    </div>
+                </div>
+                
                 <form id="contact-form">
-                    <div class="form-group">
-                        <label for="name">名前</label>
-                        <input type="text" id="name" name="name" placeholder="山田 太郎">
+                    <div class="form-row">
+                        <div class="form-group drop-zone" data-field="name">
+                            <label for="name">名前</label>
+                            <input type="text" id="name" name="name" placeholder="山田 太郎">
+                            <div class="drop-indicator">ここにドロップ</div>
+                        </div>
+                        
+                        <div class="form-group drop-zone" data-field="title">
+                            <label for="title">役職</label>
+                            <input type="text" id="title" name="title" placeholder="部長">
+                            <div class="drop-indicator">ここにドロップ</div>
+                        </div>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="form-group drop-zone" data-field="company">
                         <label for="company">会社名</label>
                         <input type="text" id="company" name="company" placeholder="株式会社サンプル">
+                        <div class="drop-indicator">ここにドロップ</div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="phone">電話番号</label>
-                        <input type="tel" id="phone" name="phone" placeholder="03-1234-5678">
+                    <div class="form-row">
+                        <div class="form-group drop-zone" data-field="phone">
+                            <label for="phone">電話番号</label>
+                            <input type="tel" id="phone" name="phone" placeholder="03-1234-5678">
+                            <div class="drop-indicator">ここにドロップ</div>
+                        </div>
+                        
+                        <div class="form-group drop-zone" data-field="email">
+                            <label for="email">メールアドレス</label>
+                            <input type="email" id="email" name="email" placeholder="yamada@example.com">
+                            <div class="drop-indicator">ここにドロップ</div>
+                        </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="email">メールアドレス</label>
-                        <input type="email" id="email" name="email" placeholder="yamada@example.com">
+                    <div class="form-group drop-zone" data-field="website">
+                        <label for="website">ウェブサイト</label>
+                        <input type="url" id="website" name="website" placeholder="https://example.com">
+                        <div class="drop-indicator">ここにドロップ</div>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="form-group drop-zone" data-field="address">
                         <label for="address">会社住所</label>
                         <textarea id="address" name="address" rows="3" placeholder="東京都渋谷区..."></textarea>
+                        <div class="drop-indicator">ここにドロップ</div>
                     </div>
                     
                     <div class="form-controls">

@@ -152,11 +152,128 @@ class BusinessCardScanner {
     }
 
     populateForm(data) {
+        // Populate form fields
         document.getElementById('name').value = data.name || '';
         document.getElementById('company').value = data.company || '';
+        document.getElementById('title').value = data.title || '';
         document.getElementById('phone').value = data.phone || '';
         document.getElementById('email').value = data.email || '';
+        document.getElementById('website').value = data.website || '';
         document.getElementById('address').value = data.address || '';
+        
+        // Populate extracted items for drag & drop
+        this.populateExtractedItems(data.extractedItems || []);
+        
+        // Setup drag & drop functionality
+        this.setupDragAndDrop();
+    }
+
+    populateExtractedItems(extractedItems) {
+        const container = document.getElementById('items-container');
+        container.innerHTML = '';
+        
+        if (extractedItems.length === 0) {
+            container.innerHTML = '<p style="color: #6c757d; font-style: italic; margin: 0;">抽出された追加情報はありません</p>';
+            return;
+        }
+        
+        extractedItems.forEach((item, index) => {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'draggable-item';
+            itemElement.draggable = true;
+            itemElement.textContent = item.text;
+            itemElement.dataset.index = index;
+            itemElement.dataset.text = item.text;
+            
+            // Add drag event listeners
+            itemElement.addEventListener('dragstart', this.handleDragStart.bind(this));
+            itemElement.addEventListener('dragend', this.handleDragEnd.bind(this));
+            
+            container.appendChild(itemElement);
+        });
+    }
+
+    setupDragAndDrop() {
+        const dropZones = document.querySelectorAll('.drop-zone');
+        
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', this.handleDragOver.bind(this));
+            zone.addEventListener('dragenter', this.handleDragEnter.bind(this));
+            zone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+            zone.addEventListener('drop', this.handleDrop.bind(this));
+        });
+    }
+
+    handleDragStart(e) {
+        e.dataTransfer.setData('text/plain', e.target.dataset.text);
+        e.dataTransfer.setData('application/x-item-index', e.target.dataset.index);
+        e.target.classList.add('dragging');
+    }
+
+    handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+    }
+
+    handleDragOver(e) {
+        e.preventDefault();
+    }
+
+    handleDragEnter(e) {
+        e.preventDefault();
+        e.currentTarget.classList.add('drag-over');
+    }
+
+    handleDragLeave(e) {
+        // Only remove drag-over if we're leaving the drop zone entirely
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+    }
+
+    handleDrop(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+        
+        const text = e.dataTransfer.getData('text/plain');
+        const itemIndex = e.dataTransfer.getData('application/x-item-index');
+        const fieldName = e.currentTarget.dataset.field;
+        
+        if (text && fieldName) {
+            // Update the form field
+            const input = e.currentTarget.querySelector('input, textarea');
+            if (input) {
+                if (input.value.trim() === '') {
+                    input.value = text;
+                } else {
+                    // Ask user if they want to replace or append
+                    const replace = confirm(`「${fieldName === 'name' ? '名前' : 
+                                                  fieldName === 'company' ? '会社名' : 
+                                                  fieldName === 'title' ? '役職' :
+                                                  fieldName === 'phone' ? '電話番号' :
+                                                  fieldName === 'email' ? 'メールアドレス' :
+                                                  fieldName === 'website' ? 'ウェブサイト' :
+                                                  fieldName === 'address' ? '住所' : fieldName}」の既存の値を「${text}」で置き換えますか？\n\nキャンセルすると末尾に追加されます。`);
+                    
+                    if (replace) {
+                        input.value = text;
+                    } else {
+                        input.value += (input.tagName === 'TEXTAREA' ? '\n' : ' ') + text;
+                    }
+                }
+                
+                // Mark the dragged item as used
+                if (itemIndex !== null) {
+                    const item = document.querySelector(`[data-index="${itemIndex}"]`);
+                    if (item) {
+                        item.classList.add('used');
+                        item.draggable = false;
+                    }
+                }
+                
+                // Trigger input event for any validation
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
     }
 
     retakePhoto() {
@@ -169,8 +286,10 @@ class BusinessCardScanner {
         const contactData = {
             name: document.getElementById('name').value.trim(),
             company: document.getElementById('company').value.trim(),
+            title: document.getElementById('title').value.trim(),
             phone: document.getElementById('phone').value.trim(),
             email: document.getElementById('email').value.trim(),
+            website: document.getElementById('website').value.trim(),
             address: document.getElementById('address').value.trim()
         };
 

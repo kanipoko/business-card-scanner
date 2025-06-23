@@ -5,7 +5,7 @@ class VCardGenerator {
     }
 
     generate(contactData) {
-        const {name, company, phone, email, address} = contactData;
+        const {name, company, title, phone, email, website, address} = contactData;
         
         // vCard format lines
         const vCardLines = [
@@ -29,6 +29,11 @@ class VCardGenerator {
             vCardLines.push(`ORG:${company}`);
         }
 
+        // Title/Position
+        if (title) {
+            vCardLines.push(`TITLE:${title}`);
+        }
+
         // Phone number
         if (phone) {
             // Clean phone number
@@ -39,6 +44,13 @@ class VCardGenerator {
         // Email
         if (email) {
             vCardLines.push(`EMAIL;TYPE=WORK:${email}`);
+        }
+
+        // Website
+        if (website) {
+            // Ensure URL has protocol
+            const url = website.match(/^https?:\/\//) ? website : `https://${website}`;
+            vCardLines.push(`URL:${url}`);
         }
 
         // Address

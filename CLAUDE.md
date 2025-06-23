@@ -4,18 +4,20 @@
 スマホブラウザで使える名刺スキャンアプリ
 
 ## Requirements
-- **抽出情報**: 名前、会社名、電話番号、メールアドレス、会社住所
+- **抽出情報**: 名前、会社名、役職、電話番号、メールアドレス、ウェブサイト、会社住所
 - **対応言語**: 日本語・英語
 - **出力形式**: vCard形式（iPhone連絡先対応）
-- **OCR**: Google Vision API
+- **AI解析**: Gemini 2.5 Flash（高精度認識）
+- **UI機能**: ドラッグ&ドロップによる情報修正
 - **データ保存**: 毎回ダウンロード形式（永続化なし）
 - **対象デバイス**: スマートフォンブラウザ
 
 ## Technology Stack
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **OCR Service**: Google Vision API
+- **AI Service**: Gemini 2.5 Flash API
 - **Camera API**: MediaDevices.getUserMedia()
 - **File Format**: vCard (.vcf)
+- **Drag & Drop**: HTML5 Drag and Drop API
 
 ## Development Commands
 ```bash
@@ -39,13 +41,19 @@ open http://localhost:8000
 ## Features
 1. カメラ撮影機能
 2. 画像プレビュー
-3. OCR処理（Google Vision API）
-4. 抽出結果の編集機能
-5. vCard形式でダウンロード
+3. AI解析（Gemini 2.5 Flash）
+4. 抽出結果のドラッグ&ドロップ編集
+5. 役職・ウェブサイト項目追加
+6. vCard形式でダウンロード
 
 ## Setup Instructions
 
-### 1. Google Cloud Platform設定
+### 1. Google AI Studio設定（推奨）
+1. [Google AI Studio](https://makersuite.google.com/)にアクセス
+2. 「Get API Key」でAPIキーを作成
+3. Gemini 2.0 Flash APIを使用（高精度な名刺認識）
+
+### 1-2. Google Cloud Platform設定（従来版）
 1. [Google Cloud Console](https://console.cloud.google.com/)でプロジェクト作成
 2. Vision APIを有効化:
    - APIとサービス > ライブラリ > Cloud Vision API > 有効にする
@@ -67,8 +75,9 @@ git push -u origin main
 1. [vercel.com](https://vercel.com)でGitHubアカウント連携
 2. 「New Project」でリポジトリを選択
 3. 環境変数を設定:
-   - Key: `GOOGLE_VISION_API_KEY`
-   - Value: `あなたのAPIキー`
+   - Key: `GEMINI_API_KEY` (推奨)
+   - Value: `あなたのGemini APIキー`
+   - または従来版: Key: `GOOGLE_VISION_API_KEY` / Value: `あなたのVision APIキー`
 4. 「Deploy」をクリック
 
 #### 完了！
@@ -103,9 +112,10 @@ open http://localhost:8000
 1. ブラウザでアプリにアクセス（またはインストール済みアプリを起動）
 2. 「📷 カメラを開く」をクリック
 3. 名刺を撮影
-4. 「🔍 名刺を解析」で自動抽出
-5. 結果を確認・編集
-6. 「📱 vCardをダウンロード」でiPhoneに保存
+4. 「🔍 名刺を解析」でAI自動抽出
+5. 抽出された情報をドラッグ&ドロップで各項目に割り当て
+6. 結果を確認・編集
+7. 「📱 vCardをダウンロード」でiPhoneに保存
 
 ## PWA機能
 - オフライン対応（Service Worker）
