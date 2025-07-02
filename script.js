@@ -11,6 +11,7 @@ class BusinessCardScanner {
         
         this.currentStream = null;
         this.deferredPrompt = null;
+        this.capturedImageData = null;
         
         this.setupEventListeners();
         this.setupPWA();
@@ -108,6 +109,9 @@ class BusinessCardScanner {
         // Convert to image and show preview
         const imageDataUrl = this.canvas.toDataURL('image/jpeg', 0.8);
         this.previewImage.src = imageDataUrl;
+        
+        // Store captured image data for vCard
+        this.capturedImageData = imageDataUrl;
         
         // Update UI
         this.stopCamera();
@@ -293,6 +297,13 @@ class BusinessCardScanner {
             address: document.getElementById('address').value.trim()
         };
 
+        // Add photo if available
+        if (this.capturedImageData) {
+            // Resize image for vCard using the current canvas
+            const optimizedPhoto = VCardGenerator.resizeImageForVCard(this.canvas);
+            contactData.photo = optimizedPhoto;
+        }
+
         // Validate data
         if (!this.vCardGenerator.isValid(contactData)) {
             this.showError('名前または会社名を入力してください。');
@@ -322,6 +333,9 @@ class BusinessCardScanner {
     newScan() {
         // Reset form
         document.getElementById('contact-form').reset();
+        
+        // Reset captured image data
+        this.capturedImageData = null;
         
         // Reset UI
         this.hideAllSections();

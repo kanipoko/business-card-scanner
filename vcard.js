@@ -5,7 +5,7 @@ class VCardGenerator {
     }
 
     generate(contactData) {
-        const {name, company, title, phone, email, website, address} = contactData;
+        const {name, company, title, phone, email, website, address, photo} = contactData;
         
         // vCard format lines
         const vCardLines = [
@@ -59,6 +59,13 @@ class VCardGenerator {
             vCardLines.push(`ADR;TYPE=WORK:;;${address};;;;`);
         }
 
+        // Photo
+        if (photo) {
+            // Remove data:image/jpeg;base64, prefix if present
+            const base64Data = photo.replace(/^data:image\/[a-z]+;base64,/, '');
+            vCardLines.push(`PHOTO;ENCODING=BASE64;TYPE=JPEG:${base64Data}`);
+        }
+
         // End vCard
         vCardLines.push('END:VCARD');
 
@@ -92,6 +99,40 @@ class VCardGenerator {
     isValid(contactData) {
         // At least name or company should be present
         return !!(contactData.name || contactData.company);
+    }
+
+    // Resize and optimize image for vCard
+    static resizeImageForVCard(canvas, maxWidth = 300, maxHeight = 300, quality = 0.8) {
+        
+        // Calculate new dimensions maintaining aspect ratio
+        let { width, height } = canvas;
+        if (width > height) {
+            if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+            }
+        } else {
+            if (height > maxHeight) {
+                width = (width * maxHeight) / height;
+                height = maxHeight;
+            }
+        }
+        
+        // Create new canvas with resized dimensions
+        const resizedCanvas = document.createElement('canvas');
+        resizedCanvas.width = width;
+        resizedCanvas.height = height;
+        const resizedCtx = resizedCanvas.getContext('2d');
+        
+        // Enable image smoothing for better quality
+        resizedCtx.imageSmoothingEnabled = true;
+        resizedCtx.imageSmoothingQuality = 'high';
+        
+        // Draw original image onto resized canvas
+        resizedCtx.drawImage(canvas, 0, 0, width, height);
+        
+        // Return as base64 data URL
+        return resizedCanvas.toDataURL('image/jpeg', quality);
     }
 }
 
