@@ -5,7 +5,7 @@ class VCardGenerator {
     }
 
     generate(contactData) {
-        const {name, company, title, phone, email, website, address, photo} = contactData;
+        const {name, lastName, firstName, company, title, phone, email, website, address, photo} = contactData;
         
         // vCard format lines
         const vCardLines = [
@@ -14,14 +14,13 @@ class VCardGenerator {
         ];
 
         // Full name (required)
-        if (name) {
-            // Split name into parts for FN and N fields
-            const nameParts = name.trim().split(/\s+/);
-            const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
-            const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : nameParts[0] || '';
+        if (name || lastName || firstName) {
+            const fullName = name || `${lastName} ${firstName}`.trim();
+            const last = lastName || '';
+            const first = firstName || '';
             
-            vCardLines.push(`FN:${name}`);
-            vCardLines.push(`N:${lastName};${firstName};;;`);
+            vCardLines.push(`FN:${fullName}`);
+            vCardLines.push(`N:${last};${first};;;`);
         }
 
         // Organization
@@ -97,8 +96,8 @@ class VCardGenerator {
 
     // Validate contact data
     isValid(contactData) {
-        // At least name or company should be present
-        return !!(contactData.name || contactData.company);
+        // At least name (full name, lastName, or firstName) or company should be present
+        return !!(contactData.name || contactData.lastName || contactData.firstName || contactData.company);
     }
 
     // Resize and optimize image for vCard

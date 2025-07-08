@@ -78,8 +78,8 @@ class BusinessCardScanner {
             this.currentStream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: 'environment', // Use back camera on mobile
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
+                    width: { ideal: 1920, min: 1280 },
+                    height: { ideal: 1080, min: 720 }
                 }
             });
 
@@ -106,8 +106,8 @@ class BusinessCardScanner {
         // Draw current video frame to canvas
         this.ctx.drawImage(this.camera, 0, 0);
         
-        // Convert to image and show preview
-        const imageDataUrl = this.canvas.toDataURL('image/jpeg', 0.8);
+        // Convert to image with higher quality and show preview
+        const imageDataUrl = this.canvas.toDataURL('image/jpeg', 0.95);
         this.previewImage.src = imageDataUrl;
         
         // Store captured image data for vCard
@@ -156,8 +156,12 @@ class BusinessCardScanner {
     }
 
     populateForm(data) {
+        // Split name into first and last name
+        const nameParts = this.splitName(data.name || '');
+        
         // Populate form fields
-        document.getElementById('name').value = data.name || '';
+        document.getElementById('lastName').value = nameParts.lastName;
+        document.getElementById('firstName').value = nameParts.firstName;
         document.getElementById('company').value = data.company || '';
         document.getElementById('title').value = data.title || '';
         document.getElementById('phone').value = data.phone || '';
@@ -170,6 +174,20 @@ class BusinessCardScanner {
         
         // Setup drag & drop functionality
         this.setupDragAndDrop();
+    }
+
+    splitName(fullName) {
+        if (!fullName) return { lastName: '', firstName: '' };
+        
+        const nameParts = fullName.trim().split(/\s+/);
+        
+        if (nameParts.length === 1) {
+            return { lastName: nameParts[0], firstName: '' };
+        } else if (nameParts.length === 2) {
+            return { lastName: nameParts[0], firstName: nameParts[1] };
+        } else {
+            return { lastName: nameParts[0], firstName: nameParts.slice(1).join(' ') };
+        }
     }
 
     populateExtractedItems(extractedItems) {
@@ -205,6 +223,14 @@ class BusinessCardScanner {
             zone.addEventListener('dragenter', this.handleDragEnter.bind(this));
             zone.addEventListener('dragleave', this.handleDragLeave.bind(this));
             zone.addEventListener('drop', this.handleDrop.bind(this));
+            
+            // Make input fields draggable
+            const input = zone.querySelector('input, textarea');
+            if (input) {
+                input.draggable = true;
+                input.addEventListener('dragstart', this.handleFieldDragStart.bind(this));
+                input.addEventListener('dragend', this.handleFieldDragEnd.bind(this));
+            }
         });
     }
 
@@ -216,6 +242,21 @@ class BusinessCardScanner {
 
     handleDragEnd(e) {
         e.target.classList.remove('dragging');
+    }
+
+    handleFieldDragStart(e) {
+        const value = e.target.value.trim();
+        if (value) {
+            e.dataTransfer.setData('text/plain', value);
+            e.dataTransfer.setData('application/x-field-source', e.target.id);
+            e.target.classList.add('field-dragging');
+        } else {
+            e.preventDefault();
+        }
+    }
+
+    handleFieldDragEnd(e) {
+        e.target.classList.remove('field-dragging');
     }
 
     handleDragOver(e) {
@@ -240,42 +281,80 @@ class BusinessCardScanner {
         
         const text = e.dataTransfer.getData('text/plain');
         const itemIndex = e.dataTransfer.getData('application/x-item-index');
+        const sourceFieldId = e.dataTransfer.getData('application/x-field-source');
         const fieldName = e.currentTarget.dataset.field;
         
         if (text && fieldName) {
-            // Update the form field
             const input = e.currentTarget.querySelector('input, textarea');
             if (input) {
-                if (input.value.trim() === '') {
-                    input.value = text;
+                // Handle field-to-field drag (swap or move)
+                if (sourceFieldId) {
+                    const sourceField = document.getElementById(sourceFieldId);
+                    if (sourceField && sourceField !== input) {
+                        this.handleFieldToFieldDrop(sourceField, input, text);
+                    }
                 } else {
-                    // Ask user if they want to replace or append
-                    const replace = confirm(`「${fieldName === 'name' ? '名前' : 
-                                                  fieldName === 'company' ? '会社名' : 
-                                                  fieldName === 'title' ? '役職' :
-                                                  fieldName === 'phone' ? '電話番号' :
-                                                  fieldName === 'email' ? 'メールアドレス' :
-                                                  fieldName === 'website' ? 'ウェブサイト' :
-                                                  fieldName === 'address' ? '住所' : fieldName}」の既存の値を「${text}」で置き換えますか？\n\nキャンセルすると末尾に追加されます。`);
-                    
-                    if (replace) {
+                    // Handle extracted item drag
+                    if (input.value.trim() === '') {
                         input.value = text;
                     } else {
-                        input.value += (input.tagName === 'TEXTAREA' ? '\n' : ' ') + text;
+                        // Ask user if they want to replace or append
+                        const replace = confirm(`「${fieldName === 'lastName' ? '苗字' : 
+                                                      fieldName === 'firstName' ? '名前' :
+                                                      fieldName === 'company' ? '会社名' : 
+                                                      fieldName === 'title' ? '役職' :
+                                                      fieldName === 'phone' ? '電話番号' :
+                                                      fieldName === 'email' ? 'メールアドレス' :
+                                                      fieldName === 'website' ? 'ウェブサイト' :
+                                                      fieldName === 'address' ? '住所' : fieldName}」の既存の値を「${text}」で置き換えますか？\n\nキャンセルすると末尾に追加されます。`);
+                        
+                        if (replace) {
+                            input.value = text;
+                        } else {
+                            input.value += (input.tagName === 'TEXTAREA' ? '\n' : ' ') + text;
+                        }
                     }
-                }
-                
-                // Mark the dragged item as used
-                if (itemIndex !== null) {
-                    const item = document.querySelector(`[data-index="${itemIndex}"]`);
-                    if (item) {
-                        item.classList.add('used');
-                        item.draggable = false;
+                    
+                    // Mark the dragged item as used
+                    if (itemIndex !== null) {
+                        const item = document.querySelector(`[data-index="${itemIndex}"]`);
+                        if (item) {
+                            item.classList.add('used');
+                            item.draggable = false;
+                        }
                     }
                 }
                 
                 // Trigger input event for any validation
                 input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+    }
+
+    handleFieldToFieldDrop(sourceField, targetField, text) {
+        const sourceValue = sourceField.value.trim();
+        const targetValue = targetField.value.trim();
+        
+        if (targetValue === '') {
+            // Target is empty, just move the value
+            targetField.value = sourceValue;
+            sourceField.value = '';
+        } else {
+            // Both fields have values, ask user what to do
+            const action = confirm(`「${sourceValue}」を移動しますか？\n\nOK = 移動（値を入れ替え）\nキャンセル = コピー（元の値は保持）`);
+            
+            if (action) {
+                // Swap values
+                targetField.value = sourceValue;
+                sourceField.value = targetValue;
+            } else {
+                // Copy to target, keep source
+                const replace = confirm(`「${targetValue}」を「${sourceValue}」で置き換えますか？\n\nキャンセルすると末尾に追加されます。`);
+                if (replace) {
+                    targetField.value = sourceValue;
+                } else {
+                    targetField.value += (targetField.tagName === 'TEXTAREA' ? '\n' : ' ') + sourceValue;
+                }
             }
         }
     }
@@ -287,8 +366,14 @@ class BusinessCardScanner {
 
     downloadVCard() {
         // Get form data
+        const lastName = document.getElementById('lastName').value.trim();
+        const firstName = document.getElementById('firstName').value.trim();
+        const fullName = `${lastName} ${firstName}`.trim();
+        
         const contactData = {
-            name: document.getElementById('name').value.trim(),
+            name: fullName,
+            lastName: lastName,
+            firstName: firstName,
             company: document.getElementById('company').value.trim(),
             title: document.getElementById('title').value.trim(),
             phone: document.getElementById('phone').value.trim(),
@@ -306,13 +391,13 @@ class BusinessCardScanner {
 
         // Validate data
         if (!this.vCardGenerator.isValid(contactData)) {
-            this.showError('名前または会社名を入力してください。');
+            this.showError('苗字・名前または会社名を入力してください。');
             return;
         }
 
         try {
             // Generate filename
-            const fileName = contactData.name || contactData.company || 'contact';
+            const fileName = fullName || contactData.company || 'contact';
             const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/g, '_');
             
             // Download vCard
