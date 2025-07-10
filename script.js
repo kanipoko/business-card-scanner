@@ -12,6 +12,7 @@ class BusinessCardScanner {
         this.currentStream = null;
         this.deferredPrompt = null;
         this.capturedImageData = null;
+        this.dragDropInProgress = false;
         
         this.setupEventListeners();
         this.setupPWA();
@@ -279,6 +280,12 @@ class BusinessCardScanner {
         e.preventDefault();
         e.currentTarget.classList.remove('drag-over');
         
+        // Prevent multiple drop events
+        if (this.dragDropInProgress) {
+            return;
+        }
+        this.dragDropInProgress = true;
+        
         const text = e.dataTransfer.getData('text/plain');
         const itemIndex = e.dataTransfer.getData('application/x-item-index');
         const sourceFieldId = e.dataTransfer.getData('application/x-field-source');
@@ -323,12 +330,17 @@ class BusinessCardScanner {
                             item.draggable = false;
                         }
                     }
+                    
+                    // Trigger input event for any validation
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
                 }
-                
-                // Trigger input event for any validation
-                input.dispatchEvent(new Event('input', { bubbles: true }));
             }
         }
+        
+        // Reset drag drop flag after a short delay
+        setTimeout(() => {
+            this.dragDropInProgress = false;
+        }, 200);
     }
 
     handleFieldToFieldDrop(sourceField, targetField, text) {
@@ -339,23 +351,34 @@ class BusinessCardScanner {
             // Target is empty, just move the value
             targetField.value = sourceValue;
             sourceField.value = '';
+            
+            // Trigger input events
+            sourceField.dispatchEvent(new Event('input', { bubbles: true }));
+            targetField.dispatchEvent(new Event('input', { bubbles: true }));
         } else {
             // Both fields have values, ask user what to do
-            const action = confirm(`「${sourceValue}」を移動しますか？\n\nOK = 移動（値を入れ替え）\nキャンセル = コピー（元の値は保持）`);
-            
-            if (action) {
-                // Swap values
-                targetField.value = sourceValue;
-                sourceField.value = targetValue;
-            } else {
-                // Copy to target, keep source
-                const replace = confirm(`「${targetValue}」を「${sourceValue}」で置き換えますか？\n\nキャンセルすると末尾に追加されます。`);
-                if (replace) {
+            // Use setTimeout to avoid multiple popups during drag events
+            setTimeout(() => {
+                const action = confirm(`「${sourceValue}」を移動しますか？\n\nOK = 移動（値を入れ替え）\nキャンセル = コピー（元の値は保持）`);
+                
+                if (action) {
+                    // Swap values
                     targetField.value = sourceValue;
+                    sourceField.value = targetValue;
                 } else {
-                    targetField.value += (targetField.tagName === 'TEXTAREA' ? '\n' : ' ') + sourceValue;
+                    // Copy to target, keep source
+                    const replace = confirm(`「${targetValue}」を「${sourceValue}」で置き換えますか？\n\nキャンセルすると末尾に追加されます。`);
+                    if (replace) {
+                        targetField.value = sourceValue;
+                    } else {
+                        targetField.value += (targetField.tagName === 'TEXTAREA' ? '\n' : ' ') + sourceValue;
+                    }
                 }
-            }
+                
+                // Trigger input events after all changes
+                sourceField.dispatchEvent(new Event('input', { bubbles: true }));
+                targetField.dispatchEvent(new Event('input', { bubbles: true }));
+            }, 50);
         }
     }
 

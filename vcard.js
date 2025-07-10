@@ -101,7 +101,7 @@ class VCardGenerator {
     }
 
     // Resize and optimize image for vCard
-    static resizeImageForVCard(canvas, maxWidth = 300, maxHeight = 300, quality = 0.8) {
+    static resizeImageForVCard(canvas, maxWidth = 600, maxHeight = 600, quality = 0.9) {
         
         // Calculate new dimensions maintaining aspect ratio
         let { width, height } = canvas;
