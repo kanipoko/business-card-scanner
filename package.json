@@ -1,0 +1,35 @@
+{
+  "name": "business-card-scanner",
+  "version": "2.1.0",
+  "description": "スマホで使える名刺スキャンPWA - Gemini 2.5 Flash + Vercel",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "dev:node": "npx http-server -p 8000",
+    "build": "echo 'No build step required for vanilla JS'",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/business-card-scanner.git"
+  },
+  "keywords": [
+    "business-card",
+    "scanner",
+    "pwa",
+    "gemini",
+    "vcard",
+    "ocr",
+    "mobile"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "vercel": "^latest"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

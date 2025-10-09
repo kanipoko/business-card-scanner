@@ -73,11 +73,23 @@ open http://localhost:8000
 /
 ├── index.html          # Main HTML file
 ├── style.css          # Stylesheet
-├── script.js          # Main application logic
-├── api.js             # Gemini API integration
+├── api.js             # Gemini API client (frontend)
 ├── vcard.js           # vCard generation utility
 ├── manifest.json      # PWA manifest
-└── sw.js              # Service worker
+├── sw.js              # Service worker
+├── src/
+│   └── js/
+│       ├── app.js      # Main application controller
+│       ├── camera.js   # Camera operations module
+│       ├── dragdrop.js # Drag & drop UI module
+│       ├── form.js     # Form data management module
+│       └── pwa.js      # PWA functionality module
+├── api/
+│   └── analyze.js      # Vercel serverless function (Gemini API)
+└── docs/
+    ├── architecture-diagram.md
+    └── blog/
+        └── release-v2.0.md
 ```
 
 ## 🌟 Key Features Explained

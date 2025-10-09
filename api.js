@@ -1,10 +1,19 @@
-// Vercel API integration (secure)
+/**
+ * VisionAPI Client
+ * クライアント側からVercel API Route (/api/analyze.js) を呼び出すラッパークラス
+ * APIキーはサーバー側で管理され、クライアントには露出しません
+ */
 class VisionAPI {
     constructor() {
-        // Use Vercel API Route instead of direct API calls
+        // Vercel API Route endpoint (see: /api/analyze.js)
         this.endpoint = '/api/analyze';
     }
 
+    /**
+     * 名刺画像を解析してJSON形式で情報を抽出
+     * @param {string} imageBase64 - Base64エンコードされた画像データ
+     * @returns {Promise<Object>} 抽出された名刺情報
+     */
     async analyzeImage(imageBase64) {
         try {
             const response = await fetch(this.endpoint, {

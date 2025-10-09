@@ -165,7 +165,12 @@ class BusinessCardScanner {
         document.getElementById('firstName').value = nameParts.firstName;
         document.getElementById('company').value = data.company || '';
         document.getElementById('title').value = data.title || '';
-        document.getElementById('phone').value = data.phone || '';
+        
+        // Split phone numbers between mobile and office
+        const phoneNumbers = this.splitPhoneNumbers(data.phone || '');
+        document.getElementById('mobilePhone').value = phoneNumbers.mobile;
+        document.getElementById('officePhone').value = phoneNumbers.office;
+        
         document.getElementById('email').value = data.email || '';
         document.getElementById('website').value = data.website || '';
         document.getElementById('address').value = data.address || '';
@@ -189,6 +194,34 @@ class BusinessCardScanner {
         } else {
             return { lastName: nameParts[0], firstName: nameParts.slice(1).join(' ') };
         }
+    }
+
+    splitPhoneNumbers(phoneData) {
+        if (!phoneData) return { mobile: '', office: '' };
+        
+        // If it's already split data from extractedItems
+        if (typeof phoneData === 'object') {
+            return {
+                mobile: phoneData.mobile || '',
+                office: phoneData.office || ''
+            };
+        }
+        
+        // If it's a single phone number, try to determine type
+        const phone = phoneData.trim();
+        
+        // Japanese mobile patterns (090, 080, 070)
+        if (phone.match(/^(\+81-?)?0[789]0/)) {
+            return { mobile: phone, office: '' };
+        }
+        
+        // Landline patterns (typically start with 03, 06, etc.)
+        if (phone.match(/^(\+81-?)?0[1-6]/)) {
+            return { mobile: '', office: phone };
+        }
+        
+        // Default to office if pattern is unclear
+        return { mobile: '', office: phone };
     }
 
     populateExtractedItems(extractedItems) {
@@ -310,7 +343,8 @@ class BusinessCardScanner {
                                                       fieldName === 'firstName' ? '名前' :
                                                       fieldName === 'company' ? '会社名' : 
                                                       fieldName === 'title' ? '役職' :
-                                                      fieldName === 'phone' ? '電話番号' :
+                                                      fieldName === 'mobilePhone' ? '携帯電話' :
+                                                      fieldName === 'officePhone' ? '会社電話' :
                                                       fieldName === 'email' ? 'メールアドレス' :
                                                       fieldName === 'website' ? 'ウェブサイト' :
                                                       fieldName === 'address' ? '住所' : fieldName}」の既存の値を「${text}」で置き換えますか？\n\nキャンセルすると末尾に追加されます。`);
@@ -399,7 +433,8 @@ class BusinessCardScanner {
             firstName: firstName,
             company: document.getElementById('company').value.trim(),
             title: document.getElementById('title').value.trim(),
-            phone: document.getElementById('phone').value.trim(),
+            mobilePhone: document.getElementById('mobilePhone').value.trim(),
+            officePhone: document.getElementById('officePhone').value.trim(),
             email: document.getElementById('email').value.trim(),
             website: document.getElementById('website').value.trim(),
             address: document.getElementById('address').value.trim()

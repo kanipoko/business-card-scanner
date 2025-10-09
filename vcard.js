@@ -5,7 +5,7 @@ class VCardGenerator {
     }
 
     generate(contactData) {
-        const {name, lastName, firstName, company, title, phone, email, website, address, photo} = contactData;
+        const {name, lastName, firstName, company, title, mobilePhone, officePhone, email, website, address, photo} = contactData;
         
         // vCard format lines
         const vCardLines = [
@@ -33,11 +33,18 @@ class VCardGenerator {
             vCardLines.push(`TITLE:${title}`);
         }
 
-        // Phone number
-        if (phone) {
-            // Clean phone number
-            const cleanPhone = phone.replace(/[^\d\-\+\(\)\s]/g, '');
-            vCardLines.push(`TEL;TYPE=WORK,VOICE:${cleanPhone}`);
+        // Mobile phone number
+        if (mobilePhone) {
+            // Clean mobile phone number
+            const cleanMobile = mobilePhone.replace(/[^\d\-\+\(\)\s]/g, '');
+            vCardLines.push(`TEL;TYPE=CELL:${cleanMobile}`);
+        }
+
+        // Office phone number
+        if (officePhone) {
+            // Clean office phone number
+            const cleanOffice = officePhone.replace(/[^\d\-\+\(\)\s]/g, '');
+            vCardLines.push(`TEL;TYPE=WORK,VOICE:${cleanOffice}`);
         }
 
         // Email
