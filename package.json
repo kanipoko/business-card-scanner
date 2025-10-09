@@ -23,7 +23,6 @@
     "ocr",
     "mobile"
   ],
-  "author": "Hibiki Suemasa",
   "license": "MIT",
   "engines": {
     "node": "18.x"
