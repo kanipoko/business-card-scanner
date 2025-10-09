@@ -2,6 +2,7 @@
   "name": "business-card-scanner",
   "version": "2.1.0",
   "description": "スマホで使える名刺スキャンPWA - Gemini 2.5 Flash + Vercel",
+  "type": "module",
   "main": "index.html",
   "scripts": {
     "dev": "python -m http.server 8000",
