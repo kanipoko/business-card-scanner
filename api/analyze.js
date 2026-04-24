@@ -1,7 +1,7 @@
 // Vercel API Route for Gemini API (gemini-3-flash-preview with retry and fallback)
 const MODELS = ['gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-2.0-flash'];
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 1000;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 500;
 
 async function callGeminiAPI(apiKey, requestBody, model) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
