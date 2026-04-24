@@ -1,4 +1,4 @@
-// Vercel API Route for Gemini 2.5 Flash
+// Vercel API Route for Gemini 2.5 Flash Preview
 export default async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
-    // Call Gemini 2.5 Flash API
+    // Call Gemini 2.5 Flash Preview API
     const requestBody = {
       contents: [{
         parts: [{
@@ -62,7 +62,7 @@ extractedItemsには、上記の分類に当てはまらなかった全てのテ
       }
     };
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
