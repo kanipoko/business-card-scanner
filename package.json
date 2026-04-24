@@ -1,7 +1,7 @@
 {
   "name": "business-card-scanner",
-  "version": "2.1.0",
-  "description": "スマホで使える名刺スキャンPWA - Gemini 2.5 Flash + Vercel",
+  "version": "3.0.0",
+  "description": "スマホで使える名刺スキャンPWA - Claude Haiku + Vercel",
   "type": "module",
   "main": "index.html",
   "scripts": {
@@ -19,7 +19,8 @@
     "business-card",
     "scanner",
     "pwa",
-    "gemini",
+    "claude",
+    "anthropic",
     "vcard",
     "ocr",
     "mobile"
