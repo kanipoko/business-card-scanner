@@ -1,6 +1,48 @@
-// Vercel API Route for Gemini 2.5 Flash
+// Vercel API Route for Gemini API (gemini-3-flash-preview with retry and fallback)
+const MODELS = ['gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-2.0-flash'];
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+
+async function callGeminiAPI(apiKey, requestBody, model) {
+  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody)
+  });
+  return response;
+}
+
+async function callWithRetryAndFallback(apiKey, requestBody) {
+  for (const model of MODELS) {
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const response = await callGeminiAPI(apiKey, requestBody, model);
+
+      if (response.ok) {
+        console.log(`Success with model ${model} on attempt ${attempt}`);
+        return response;
+      }
+
+      if (response.status === 503) {
+        console.warn(`503 from ${model}, attempt ${attempt}/${MAX_RETRIES}`);
+        if (attempt < MAX_RETRIES) {
+          await new Promise(r => setTimeout(r, RETRY_DELAY_MS * attempt));
+          continue;
+        }
+        // 503 retries exhausted → try next model
+        console.warn(`Falling back from ${model}`);
+        break;
+      }
+
+      // Non-503 error: return immediately
+      return response;
+    }
+  }
+  // All models failed with 503
+  return { ok: false, status: 503, text: async () => 'All models returned 503' };
+}
+
 export default async function handler(req, res) {
-  // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -12,15 +54,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No image data provided' });
     }
 
-    // Get API key from environment variables
     const apiKey = process.env.GEMINI_API_KEY;
-    
     if (!apiKey) {
       console.error('Gemini API key not found in environment variables');
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
-    // Call Gemini 2.5 Flash API
     const requestBody = {
       contents: [{
         parts: [{
@@ -40,7 +79,7 @@ export default async function handler(req, res) {
       "type": "unknown"
     },
     {
-      "text": "抽出されたテキスト2", 
+      "text": "抽出されたテキスト2",
       "type": "unknown"
     }
   ]
@@ -62,37 +101,29 @@ extractedItemsには、上記の分類に当てはまらなかった全てのテ
       }
     };
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
+    const response = await callWithRetryAndFallback(apiKey, requestBody);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Gemini API error:', response.status, errorText);
-      return res.status(response.status).json({ 
-        error: `Gemini API request failed: ${response.status}` 
+      return res.status(response.status).json({
+        error: `Gemini API request failed: ${response.status}`
       });
     }
 
     const data = await response.json();
-    
+
     if (data.candidates && data.candidates[0] && data.candidates[0].content) {
       const responseText = data.candidates[0].content.parts[0].text;
-      
+
       try {
-        // Extract JSON from response (remove any markdown formatting)
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
           throw new Error('No JSON found in response');
         }
-        
+
         const parsedData = JSON.parse(jsonMatch[0]);
-        
-        // Ensure all required fields exist
+
         const result = {
           name: parsedData.name || '',
           company: parsedData.company || '',
@@ -103,7 +134,7 @@ extractedItemsには、上記の分類に当てはまらなかった全てのテ
           website: parsedData.website || '',
           extractedItems: parsedData.extractedItems || []
         };
-        
+
         return res.status(200).json({
           success: true,
           data: result,
@@ -111,18 +142,11 @@ extractedItemsには、上記の分類に当てはまらなかった全てのテ
         });
       } catch (parseError) {
         console.error('JSON parsing error:', parseError);
-        // Fallback to empty data with raw response
         return res.status(200).json({
           success: true,
           data: {
-            name: '',
-            company: '',
-            title: '',
-            phone: '',
-            email: '',
-            address: '',
-            website: '',
-            extractedItems: []
+            name: '', company: '', title: '', phone: '',
+            email: '', address: '', website: '', extractedItems: []
           },
           rawResponse: responseText,
           parseError: parseError.message
@@ -133,24 +157,17 @@ extractedItemsには、上記の分類に当てはまらなかった全てのテ
         success: false,
         error: 'No content generated',
         data: {
-          name: '',
-          company: '',
-          title: '',
-          phone: '',
-          email: '',
-          address: '',
-          website: '',
-          extractedItems: []
+          name: '', company: '', title: '', phone: '',
+          email: '', address: '', website: '', extractedItems: []
         }
       });
     }
 
   } catch (error) {
     console.error('API Error:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Internal server error',
-      details: error.message 
+      details: error.message
     });
   }
 }
-
