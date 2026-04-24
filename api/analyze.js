@@ -4,7 +4,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 
 async function callGeminiAPI(apiKey, requestBody, model) {
-  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
