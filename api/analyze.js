@@ -65,9 +65,12 @@ extractedItemsには上記フィールドに分類されなかった全テキス
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Anthropic API error:', response.status, errorText);
-      return res.status(response.status).json({
-        error: `API request failed: ${response.status}`
-      });
+      let errorDetail = `API request failed: ${response.status}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetail = errorJson.error?.message || errorDetail;
+      } catch {}
+      return res.status(response.status).json({ error: errorDetail });
     }
 
     const data = await response.json();
