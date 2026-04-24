@@ -1,47 +1,4 @@
-// Vercel API Route for Gemini API (gemini-3-flash-preview with retry and fallback)
-const MODELS = ['gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-2.0-flash'];
-const MAX_RETRIES = 2;
-const RETRY_DELAY_MS = 500;
-
-async function callGeminiAPI(apiKey, requestBody, model) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(requestBody)
-  });
-  return response;
-}
-
-async function callWithRetryAndFallback(apiKey, requestBody) {
-  for (const model of MODELS) {
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      const response = await callGeminiAPI(apiKey, requestBody, model);
-
-      if (response.ok) {
-        console.log(`Success with model ${model} on attempt ${attempt}`);
-        return response;
-      }
-
-      if (response.status === 503) {
-        console.warn(`503 from ${model}, attempt ${attempt}/${MAX_RETRIES}`);
-        if (attempt < MAX_RETRIES) {
-          await new Promise(r => setTimeout(r, RETRY_DELAY_MS * attempt));
-          continue;
-        }
-        // 503 retries exhausted → try next model
-        console.warn(`Falling back from ${model}`);
-        break;
-      }
-
-      // Non-503 error: return immediately
-      return response;
-    }
-  }
-  // All models failed with 503
-  return { ok: false, status: 503, text: async () => 'All models returned 503' };
-}
-
+// Vercel API Route for Claude Haiku (Anthropic)
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -54,16 +11,36 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No image data provided' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      console.error('Gemini API key not found in environment variables');
+      console.error('Anthropic API key not found in environment variables');
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
-    const requestBody = {
-      contents: [{
-        parts: [{
-          text: `この名刺画像から以下の情報を抽出し、JSON形式で返してください。不明な場合は空文字列を使用してください。
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: 'image/jpeg',
+                data: imageBase64
+              }
+            },
+            {
+              type: 'text',
+              text: `この名刺画像から以下の情報を抽出し、JSONのみを返してください。説明文は不要です。不明な場合は空文字列を使用してください。
 
 {
   "name": "氏名（姓名）",
@@ -74,58 +51,51 @@ export default async function handler(req, res) {
   "address": "住所（完全な住所）",
   "website": "ウェブサイトURL",
   "extractedItems": [
-    {
-      "text": "抽出されたテキスト1",
-      "type": "unknown"
-    },
-    {
-      "text": "抽出されたテキスト2",
-      "type": "unknown"
-    }
+    { "text": "上記以外の抽出テキスト", "type": "unknown" }
   ]
 }
 
-extractedItemsには、上記の分類に当てはまらなかった全てのテキスト要素を含めてください。これにより、ユーザーが後でドラッグ&ドロップで正しい項目に割り当てることができます。
-
-日本語と英語の両方に対応し、会社名の法人格（株式会社、Corp、Incなど）も含めて正確に抽出してください。`
-        }, {
-          inline_data: {
-            mime_type: "image/jpeg",
-            data: imageBase64
-          }
+extractedItemsには上記フィールドに分類されなかった全テキスト要素を含めてください。日本語・英語両対応、法人格（株式会社、Corp、Incなど）も含めて正確に抽出してください。`
+            }
+          ]
         }]
-      }],
-      generationConfig: {
-        temperature: 0.1,
-        maxOutputTokens: 1000,
-        responseMimeType: "application/json"
-      }
-    };
-
-    const response = await callWithRetryAndFallback(apiKey, requestBody);
+      })
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Gemini API error:', response.status, errorText);
+      console.error('Anthropic API error:', response.status, errorText);
       return res.status(response.status).json({
-        error: `Gemini API request failed: ${response.status}`
+        error: `API request failed: ${response.status}`
       });
     }
 
     const data = await response.json();
+    const responseText = data.content?.[0]?.text;
 
-    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-      const responseText = data.candidates[0].content.parts[0].text;
+    if (!responseText) {
+      return res.status(200).json({
+        success: false,
+        error: 'No content generated',
+        data: { name: '', company: '', title: '', phone: '', email: '', address: '', website: '', extractedItems: [] }
+      });
+    }
 
+    try {
+      let parsedData;
       try {
+        parsedData = JSON.parse(responseText);
+      } catch {
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
-          throw new Error('No JSON found in response');
+          throw new Error(`No JSON found in response. Raw: ${responseText.slice(0, 300)}`);
         }
+        parsedData = JSON.parse(jsonMatch[0]);
+      }
 
-        const parsedData = JSON.parse(jsonMatch[0]);
-
-        const result = {
+      return res.status(200).json({
+        success: true,
+        data: {
           name: parsedData.name || '',
           company: parsedData.company || '',
           title: parsedData.title || '',
@@ -134,28 +104,12 @@ extractedItemsには、上記の分類に当てはまらなかった全てのテ
           address: parsedData.address || '',
           website: parsedData.website || '',
           extractedItems: parsedData.extractedItems || []
-        };
-
-        return res.status(200).json({
-          success: true,
-          data: result,
-          rawResponse: responseText
-        });
-      } catch (parseError) {
-        console.error('JSON parsing error:', parseError, 'Raw response:', responseText);
-        return res.status(500).json({
-          error: `Failed to parse model response: ${parseError.message}`,
-          rawResponse: responseText
-        });
-      }
-    } else {
-      return res.status(200).json({
-        success: false,
-        error: 'No content generated',
-        data: {
-          name: '', company: '', title: '', phone: '',
-          email: '', address: '', website: '', extractedItems: []
         }
+      });
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError, 'Raw response:', responseText);
+      return res.status(500).json({
+        error: `Failed to parse model response: ${parseError.message}`
       });
     }
 
