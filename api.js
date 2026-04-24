@@ -27,8 +27,20 @@ class VisionAPI {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `API request failed: ${response.status}`);
+                let errorMessage = `API request failed: ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch {
+                    // Non-JSON response (e.g. Vercel timeout HTML page)
+                    const text = await response.text().catch(() => '');
+                    if (response.status === 504 || response.status === 503) {
+                        errorMessage = 'サーバーがタイムアウトしました。もう一度お試しください。';
+                    } else if (text) {
+                        errorMessage = `API request failed: ${response.status}`;
+                    }
+                }
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
