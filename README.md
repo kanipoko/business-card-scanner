@@ -5,7 +5,7 @@ A mobile-first business card scanner that uses AI to extract contact information
 ## 🚀 Features
 
 - 📱 **Mobile-first PWA** - Works on smartphones, installable as an app
-- 🤖 **AI-powered extraction** - Uses Gemini 2.5 Flash for high-accuracy text recognition
+- 🤖 **AI-powered extraction** - Uses Claude Haiku for high-accuracy text recognition
 - 🎯 **Drag & drop editing** - Easily correct and organize extracted information
 - 📸 **Photo embedding** - Captured business card photos display in iPhone contacts
 - 🌐 **Multi-language support** - Works with Japanese and English business cards
@@ -15,7 +15,7 @@ A mobile-first business card scanner that uses AI to extract contact information
 ## 🛠️ Technology Stack
 
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
-- **AI Service**: Google Gemini 2.5 Flash API
+- **AI Service**: Anthropic Claude Haiku API (`claude-haiku-4-5-20251001`)
 - **Camera**: MediaDevices.getUserMedia() API
 - **File Format**: vCard 3.0 (.vcf)
 - **Drag & Drop**: HTML5 Drag and Drop API
@@ -47,16 +47,16 @@ open http://localhost:8000
 
 ## 🔧 Setup
 
-### Get Gemini API Key
-1. Visit [Google AI Studio](https://makersuite.google.com/)
-2. Click "Get API Key"
-3. Create a new API key for Gemini 2.5 Flash
+### Get Anthropic API Key
+1. Visit [console.anthropic.com](https://console.anthropic.com)
+2. Go to "API Keys"
+3. Create a new API key
 
 ### Deploy to Vercel
 1. Fork this repository
 2. Connect to [Vercel](https://vercel.com)
 3. Set environment variable:
-   - `GEMINI_API_KEY`: Your Gemini API key
+   - `ANTHROPIC_API_KEY`: Your Anthropic API key
 4. Deploy
 
 ## 🎯 How to Use
@@ -73,7 +73,7 @@ open http://localhost:8000
 /
 ├── index.html          # Main HTML file
 ├── style.css          # Stylesheet
-├── api.js             # Gemini API client (frontend)
+├── api.js             # Anthropic API client (frontend)
 ├── vcard.js           # vCard generation utility
 ├── manifest.json      # PWA manifest
 ├── sw.js              # Service worker
@@ -85,7 +85,7 @@ open http://localhost:8000
 │       ├── form.js     # Form data management module
 │       └── pwa.js      # PWA functionality module
 ├── api/
-│   └── analyze.js      # Vercel serverless function (Gemini API)
+│   └── analyze.js      # Vercel serverless function (Claude API)
 └── docs/
     ├── architecture-diagram.md
     └── blog/
@@ -95,7 +95,7 @@ open http://localhost:8000
 ## 🌟 Key Features Explained
 
 ### AI-Powered Extraction
-- Uses Gemini 2.5 Flash for accurate text recognition
+- Uses Claude Haiku for accurate text recognition
 - Supports both Japanese and English business cards
 - Extracts: Name, Company, Title, Phone, Email, Website, Address
 
@@ -135,7 +135,7 @@ MIT License - see LICENSE file for details
 
 ## 🙏 Acknowledgments
 
-- Google Gemini AI for powerful text recognition
+- Anthropic Claude AI for powerful text recognition
 - Modern web APIs for camera and file handling
 - Progressive Web App standards for mobile experience
 

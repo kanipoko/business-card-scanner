@@ -1,6 +1,6 @@
 # Vercel環境変数の設定手順
 
-Vercelにデプロイする際、Gemini APIキーを環境変数として設定する必要があります。
+Vercelにデプロイする際、Anthropic APIキーを環境変数として設定する必要があります。
 
 ## 📋 設定手順
 
@@ -14,9 +14,9 @@ https://vercel.com/dashboard にアクセスして、プロジェクトを選択
 2. 左サイドバーから **Environment Variables** を選択
 3. 以下の環境変数を追加：
 
-   **環境変数名:** `GEMINI_API_KEY`
+   **環境変数名:** `ANTHROPIC_API_KEY`
 
-   **値:** あなたのGemini APIキー
+   **値:** あなたのAnthropic APIキー
 
    **環境:** Production, Preview, Development すべて選択
 
@@ -44,12 +44,12 @@ git push origin main
 vercel --prod
 ```
 
-## 🔑 Gemini APIキーの取得方法
+## 🔑 Anthropic APIキーの取得方法
 
 まだAPIキーを持っていない場合：
 
-1. [Google AI Studio](https://makersuite.google.com/) にアクセス
-2. 「Get API Key」をクリック
+1. [console.anthropic.com](https://console.anthropic.com) にアクセス
+2. 「API Keys」をクリック
 3. 新しいAPIキーを作成
 4. キーをコピーして上記の環境変数に設定
 
@@ -70,35 +70,34 @@ vercel --prod
 
 ## 📝 トラブルシューティング
 
-### エラー: "Environment Variable 'GEMINI_API_KEY' is not defined"
+### エラー: "Server configuration error"
 
-**原因:** 環境変数が設定されていない
+**原因:** 環境変数 `ANTHROPIC_API_KEY` が設定されていない
 
 **解決策:**
 1. Vercelダッシュボードで環境変数を確認
 2. すべての環境（Production, Preview, Development）にチェックが入っているか確認
 3. 再デプロイ
 
-### エラー: "Gemini API request failed: 401"
+### エラー: "API request failed: 401"
 
 **原因:** APIキーが無効または期限切れ
 
 **解決策:**
-1. Google AI Studioで新しいAPIキーを生成
+1. [console.anthropic.com](https://console.anthropic.com) で新しいAPIキーを生成
 2. Vercelの環境変数を更新
 3. 再デプロイ
 
-### エラー: "Gemini API request failed: 429"
+### エラー: "API request failed: 429"
 
 **原因:** APIの使用制限に達した
 
 **解決策:**
-1. [Google AI Studio](https://makersuite.google.com/) でクォータを確認
-2. 必要に応じてプランをアップグレード
-3. レート制限の緩和を待つ
+1. [console.anthropic.com](https://console.anthropic.com) でUsageを確認
+2. 必要に応じてクレジットを追加
 
 ## 🔗 参考リンク
 
 - [Vercel Environment Variables Documentation](https://vercel.com/docs/concepts/projects/environment-variables)
-- [Google AI Studio](https://makersuite.google.com/)
-- [Gemini API Documentation](https://ai.google.dev/docs)
+- [Anthropic Console](https://console.anthropic.com)
+- [Anthropic API Documentation](https://docs.anthropic.com)
