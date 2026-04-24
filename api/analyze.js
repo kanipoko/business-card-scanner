@@ -97,7 +97,8 @@ extractedItemsには、上記の分類に当てはまらなかった全てのテ
       }],
       generationConfig: {
         temperature: 0.1,
-        maxOutputTokens: 1000
+        maxOutputTokens: 1000,
+        responseMimeType: "application/json"
       }
     };
 
@@ -141,15 +142,10 @@ extractedItemsには、上記の分類に当てはまらなかった全てのテ
           rawResponse: responseText
         });
       } catch (parseError) {
-        console.error('JSON parsing error:', parseError);
-        return res.status(200).json({
-          success: true,
-          data: {
-            name: '', company: '', title: '', phone: '',
-            email: '', address: '', website: '', extractedItems: []
-          },
-          rawResponse: responseText,
-          parseError: parseError.message
+        console.error('JSON parsing error:', parseError, 'Raw response:', responseText);
+        return res.status(500).json({
+          error: `Failed to parse model response: ${parseError.message}`,
+          rawResponse: responseText
         });
       }
     } else {
